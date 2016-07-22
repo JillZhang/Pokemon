@@ -1,0 +1,61 @@
+#Enter the reference number for the Pokemon
+#Power up your pokemon to see the old CP and new CP
+NewCP<-498
+OldCP<-484
+# Enter the 6 base stats of your pokemon:HP, Attack, Defense, SP.Atk, SP.Def, Speed.http://pokemondb.net/pokedex/golduck
+HP<-50
+Attack<-52
+Defense<-48
+Sp.Atk<-65
+SP.Def<-50
+Speed<-55
+
+######################Do not edit code below###############################################################################
+library(ggplot2)
+#convert the 6 stats to 3 stats in Pokemon go
+Base_Attack = 2.6 *(Attack^0.46)*(Sp.Atk^0.46)*(Speed^0.04) + 3
+Base_Defense = 2.6 * (Defense^0.46)*(SP.Def^0.46)*(Speed^0.04) + 3
+Base_Stamina = 2 * HP
+
+#calculate the Base ASD, a combination number of Attack, Defense and Stamina
+Base_ASD<-Base_Attack*sqrt(Base_Defense)*sqrt(Base_Stamina)
+#Calculate the guess level of the pokemon
+guess<-round(0.5*NewCP/(NewCP-OldCP))
+#Here is the stats for the CP_multiple get from the http://pokemongo.gamepress.gg/cp-multiplier
+level1_10<-0.009426125469
+level10_20<-0.008919025675
+level20_30<-0.008924905903
+level30_40<-0.00445946079
+
+MCP_01<-0.0940000000000
+MCP_10<-0.42250001
+MCP_20<-0.5974000100000
+MCP_30<-0.7317000000000
+
+if (guess<=10) {
+  MCP=MCP_01
+  level_D=level1_10
+} else if (guess<=20) {
+  MCP=MCP_10
+  level_D=level10_20
+} else if (guess<=30) {
+  MCP=MCP_20
+  level_D=level20_30
+} else {
+  MCP=MCP_30
+  level_D=level30_40
+}
+#Calculate your Pokemon's ASD
+ASD<-10*(NewCP-OldCP)/level_D
+#Calculate the pokemon start elvel
+CP_startlevel<-ASD*(MCP_10)^2/10
+#Calculate the pokemon level. It should be almost the same as the guess level.
+pokemon_level<-10*(guess%/%10)+(NewCP-CP_startlevel)/(2*(NewCP-OldCP))
+#Calculate how much your pokemon ASD is higher than the base stats
+Individual_value<-ASD/Base_ASD
+df<-data.frame(pokemon=c("base","actual"),ASD_value=c(Base_ASD,ASD))
+message("The actual level of your pokemon is ",round(pokemon_level,2))
+message("Your Pokemon is ",round(Individual_value,3)," of the base level")
+
+compare_map<-ggplot(data=df,mapping = aes(pokemon,ASD_value,fill=pokemon))
+compare_map+geom_bar(stat="identity")+ggtitle("Your Pokemon in comparison with base level in Attack, Defense and Stammie (ASD)")
