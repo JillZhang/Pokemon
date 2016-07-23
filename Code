@@ -2,6 +2,7 @@
 #Power up your pokemon to see the old CP and new CP
 NewCP<-498
 OldCP<-484
+PK_HP<-65
 # Enter the 6 base stats of your pokemon:HP, Attack, Defense, SP.Atk, SP.Def, Speed.http://pokemondb.net/pokedex/golduck
 HP<-50
 Attack<-52
@@ -12,6 +13,15 @@ Speed<-55
 
 ######################Do not edit code below###############################################################################
 library(ggplot2)
+setwd("C:/Users/jiang/Documents/CareerTu")
+CP_MP<-data.frame(read.csv("CP_MP.csv"))
+#Draw the line between Pokemon level and Multiplers
+ggplot(data=CP_MP,mapping=aes(x=level,y=multipers))+geom_line()
+
+#implement the model
+CP_level<-lm(multipers~sqrt(level),data=CP_MP)
+summary(CP_level)
+
 #convert the 6 stats to 3 stats in Pokemon go
 Base_Attack = 2.6 *(Attack^0.46)*(Sp.Atk^0.46)*(Speed^0.04) + 3
 Base_Defense = 2.6 * (Defense^0.46)*(SP.Def^0.46)*(Speed^0.04) + 3
@@ -53,9 +63,12 @@ CP_startlevel<-ASD*(MCP_10)^2/10
 pokemon_level<-10*(guess%/%10)+(NewCP-CP_startlevel)/(2*(NewCP-OldCP))
 #Calculate how much your pokemon ASD is higher than the base stats
 Individual_value<-ASD/Base_ASD
-df<-data.frame(pokemon=c("base","actual"),ASD_value=c(Base_ASD,ASD))
-message("The actual level of your pokemon is ",round(pokemon_level,2))
+potential_ASD<-(Base_Attack+15)*((Base_Stamina+15)^0.5)*((Base_Defense+15)^.5)
+
+df<-data.frame(pokemon=c("base","actual","Potential"),ASD_value=c(Base_ASD,ASD,potential_ASD))
+message("The actual level of your pokemon is ",round(pokemon_level))
 message("Your Pokemon is ",round(Individual_value,3)," of the base level")
 
 compare_map<-ggplot(data=df,mapping = aes(pokemon,ASD_value,fill=pokemon))
-compare_map+geom_bar(stat="identity")+ggtitle("Your Pokemon in comparison with base level in Attack, Defense and Stammie (ASD)")
+compare_map+geom_bar(stat="identity")+
+  ggtitle("Your Pokemon in comparison with base level in Attack, Defense and Stammie (ASD)")
